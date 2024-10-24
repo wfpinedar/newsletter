@@ -1,7 +1,8 @@
 #Seehttps://help.github.com/articles/ignoring-files/formoreaboutignoringfiles.
 
 #dependencies
-/node_modules
+node_modules/
+newsletter-front/node_modules/
 /.pnp
 .pnp.js
 
