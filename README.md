@@ -14,17 +14,17 @@ Este proyecto consiste en un sistema de gestión de newsletters desarrollado con
 
 ## Requisitos
 
-- Node.js (v14 o superior)
+- Node.js (v16 o superior)
 - npm (v6 o superior)
-- Python (v3.8 o superior)
-- Django (v3.0 o superior)
+- Python (v3.9 o superior)
+- Django (v4.0 o superior)
 
 ## Instalación
 
 1. **Clonar el Repositorio**:
    ```bash
    git clone <URL_DEL_REPOSITORIO>
-   cd newsletter-frontend
+   cd newsletter-front
    ```
 
 ## Configuración del Proyecto Backend
@@ -66,7 +66,7 @@ El proyecto se creó utilizando **Create React App** para una configuración rá
 
 Acceder a la carpeta del proyecto:
 ```bash
-cd newsletter-frontend
+cd newsletter-front
 ```
 
 ### Paso 2: Instalar dependencias
@@ -108,6 +108,12 @@ python manage.py runserver
 Para iniciar el servidor de desarrollo de React, usa el siguiente comando dentro de la carpeta del frontend:
 ```bash
 npm start
+```
+
+### Iniciar la con docker
+
+```bash
+docker-compose up --build
 ```
 
 Este comando iniciará la aplicación en [http://localhost:3000](http://localhost:3000).

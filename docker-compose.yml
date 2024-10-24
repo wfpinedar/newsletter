@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      context: ./newsletter_app
+    container_name: django_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./newsletter_app:/app
+    environment:
+      - DJANGO_SECRET_KEY='django-insecure-)0$1ce6z6lri%0r_46v2(*68=5usv6f9bhkgylrcp7^_^b*^9b'
+      - DJANGO_ALLOWED_HOSTS=*
+
+  frontend:
+    build:
+      context: ./newsletter-front
+    container_name: react_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
