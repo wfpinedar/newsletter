@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getNewsletters, createNewsletter, sendNewsletter, scheduleNewsletter } from '../services/api';
+import { getNewsletters, createNewsletter, sendNewsletter, scheduleNewsletter, deleteNewsletter } from '../services/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane, faTrash, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 function NewsletterList() {
   const [newsletters, setNewsletters] = useState([]);
@@ -45,6 +47,15 @@ function NewsletterList() {
       .catch(error => console.error('Error al enviar la newsletter:', error));
   };
 
+  const handleDeleteNewsletter = (id) => {
+    deleteNewsletter(id)
+      .then(() => {
+        alert('Newsletter eliminada exitosamente');
+        fetchNewsletters();
+      })
+      .catch(error => console.error('Error al borrar la newsletter:', error));
+  };
+
   const handleScheduleNewsletter = (id) => {
     const scheduledFor = prompt('Ingrese la fecha de envío (YYYY-MM-DDTHH:MM:SSZ):');
     if (scheduledFor) {
@@ -60,9 +71,19 @@ function NewsletterList() {
       <ul>
         {newsletters.map(newsletter => (
           <li key={newsletter.id}>
+            {newsletter.id}
             {newsletter.title}
-            <button onClick={() => handleSendNewsletter(newsletter.id)}>Enviar</button>
-            <button onClick={() => handleScheduleNewsletter(newsletter.id)}>Programar Envío</button>
+            <div className="button-group">
+              <button onClick={() => handleSendNewsletter(newsletter.id)}>
+                <FontAwesomeIcon icon={faPaperPlane} />
+              </button>
+              <button onClick={() => handleScheduleNewsletter(newsletter.id)}>
+                <FontAwesomeIcon icon={faCalendarAlt} />
+              </button>
+              <button onClick={() => handleDeleteNewsletter(newsletter.id)}>
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+            </div>
           </li>
         ))}
       </ul>
