@@ -3,7 +3,8 @@ version: '3'
 services:
   backend:
     build:
-      context: ./newsletter_app
+      context: .
+      dockerfile: newsletter_app/Dockerfile
     container_name: django_backend
     ports:
       - "8000:8000"

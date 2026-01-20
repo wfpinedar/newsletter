@@ -4,7 +4,8 @@ class Newsletter(models.Model):
     title = models.CharField(max_length=255)
     content_pdf = models.FileField(upload_to='newsletters/')
     content_image = models.ImageField(upload_to='newsletters/', null=True, blank=True)
-    scheculed_for = models.DateField(blank=True, null=True)
+    # Fecha y hora en la que debe enviarse automaticamente
+    scheduled_for = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Subscriber(models.Model):

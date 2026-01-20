@@ -1,187 +1,74 @@
-# Proyecto Completo de Gestión de Newsletters con Backend y Frontend
+# Newsletter Manager (Django + React)
 
-Este proyecto consiste en un sistema de gestión de newsletters desarrollado con **Django** para el backend y **React** para el frontend. La aplicación permite a los administradores crear newsletters, programar envíos, enviar archivos PDF o imágenes adjuntas, y gestionar una lista de suscriptores.
+Aplicacion full stack para crear y enviar newsletters con adjuntos PDF/imagenes, gestionar suscriptores y programar envios automatizados. Combina API REST en Django y frontend React listo para correr en Docker.
 
-## Tabla de Contenidos
-- [Requisitos](#requisitos)
-- [Instalación](#instalación)
-- [Configuración del Proyecto Backend](#configuración-del-proyecto-backend)
-- [Configuración del Proyecto Frontend](#configuración-del-proyecto-frontend)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Iniciar la Aplicación](#iniciar-la-aplicación)
-- [Explicación de la Funcionalidad](#explicación-de-la-funcionalidad)
-- [Estilo y Diseño](#estilo-y-diseño)
+## Requisitos rapidos
+- Docker (recomendado) o Python 3.10+ para backend (Django 5.1) y Node 18+ para frontend.
 
-## Requisitos
+## Lo que puedes hacer
+- Crear newsletters con titulo, PDF y/o imagen adjunta.
+- Enviar al instante o programar fecha/hora de envio (`scheduled_for`).
+- Gestionar suscriptores (alta/baja) y respetar el opt-out via URL de desuscripcion.
+- Guardar adjuntos en disco y enviar contenido HTML con fallback de texto.
+- Ejecutar tareas programadas para despachar newsletters pendientes.
 
-- Node.js (v16 o superior)
-- npm (v6 o superior)
-- Python (v3.9 o superior)
-- Django (v4.0 o superior)
+## Arquitectura rapida
+- Backend: Django + Django REST Framework, SQLite por defecto, CORS habilitado para el frontend.
+- Frontend: React (Create React App) con axios para consumir la API.
+- Docker Compose: levanta backend en `:8000` y frontend servido por Nginx en `:3000`.
 
-## Instalación
-
-1. **Clonar el Repositorio**:
+## Como levantar rapido
+1) Arranca todo con Docker:
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
-   cd newsletter-front
+   docker compose up --build
    ```
+   - Frontend: http://localhost:3000
+   - API: http://127.0.0.1:8000/api
 
-## Configuración del Proyecto Backend
+2) Sin Docker (modo desarrollo):
+   - Backend
+     ```bash
+     cd newsletter_app
+     python -m venv .venv && . .venv/bin/activate
+     pip install -r ../requirements.txt
+     python manage.py migrate
+     python manage.py runserver 0.0.0.0:8000
+     ```
+   - Frontend
+     ```bash
+     cd newsletter-front
+     npm install
+     npm start
+     ```
+   Ajusta `REACT_APP_API_URL` si el backend no corre en el host por defecto.
 
-### Paso 1: Crear un Entorno Virtual
-Para mantener las dependencias del proyecto organizadas, se recomienda usar un entorno virtual.
+## API esencial (base `/api`)
+- `GET /newsletters/` listar
+- `POST /newsletters/` crear (multipart con `title`, `content_pdf`, `content_image`)
+- `POST /newsletters/{id}/send/` enviar ahora
+- `POST /newsletters/{id}/schedule/` programar (`scheduled_for` en ISO 8601)
+- `DELETE /newsletters/{id}/` borrar
+- `GET /subscribers/` listar
+- `POST /subscribers/` alta (`email`)
+- `GET /unsubscribe/{email}/` baja simple por email
 
-```bash
-python -m venv env
-source env/bin/activate  # En Windows usar `env\Scripts\activate.bat`
-```
+## Flujo de uso sugerido
+- Crea suscriptores desde el panel React.
+- Sube PDF/imagen y crea la newsletter.
+- Envia al instante o programa con fecha/hora ISO (`2024-10-22T18:00:00Z`).
+- Corre la tarea programada `send_scheduled_newsletters` (cron/Celery o comando manual) para despachar pendientes, por ejemplo:
+  ```bash
+  python manage.py shell -c "from newsletters.tasks import send_scheduled_newsletters; send_scheduled_newsletters()"
+  ```
 
-### Paso 2: Instalar Dependencias del Backend
-Dentro del entorno virtual, instala Django y otras dependencias necesarias.
+## Configuracion util
+- Email: por defecto usa `EmailBackend` de consola. Define `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` para correo real.
+- CORS: edita `CORS_ALLOWED_ORIGINS` en `newsletter_app/settings.py` o usa env `DJANGO_ALLOWED_HOSTS` en Docker.
+- Archivos: los adjuntos se guardan bajo `media/newsletters/` en el contenedor o en disco local.
+- Frontend: define `REACT_APP_API_URL` para apuntar al backend que uses (localhost, container, etc.).
 
-```bash
-pip install -r requirements.txt
-```
-
-### Paso 3: Configurar el Proyecto Django
-
-1. **Migrar la Base de Datos**:
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-5. **Iniciar el Servidor**:
-   ```bash
-   python manage.py runserver
-   ```
-
-El backend estará disponible en [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api).
-
-## Configuración del Proyecto Frontend
-
-### Paso 1: Levantar el Proyecto React
-El proyecto se creó utilizando **Create React App** para una configuración rápida y sencilla.
-
-Acceder a la carpeta del proyecto:
-```bash
-cd newsletter-front
-```
-
-### Paso 2: Instalar dependencias
-Se requiere **axios** para manejar las solicitudes HTTP hacia el backend y **react-router-dom** para la navegación en la aplicación.
-```bash
-npm install
-```
-
-## Estructura del Proyecto
-
-El proyecto tiene la siguiente estructura básica:
-
-```
-newsletter-frontend/
-├── src/
-│   ├── components/
-│   │   ├── NewsletterList.js
-│   │   ├── SubscriberList.js
-│   ├── services/
-│   │   └── api.js
-│   ├── App.js
-│   ├── App.css
-│   └── index.js
-```
-
-- **components/**: Contiene los componentes reutilizables como `NewsletterList` y `SubscriberList`.
-- **services/**: Incluye el archivo `api.js` que define las funciones para interactuar con la API del backend.
-- **App.js**: Punto de entrada principal para la aplicación, donde se integran los componentes.
-
-## Iniciar la Aplicación
-
-### Iniciar el Backend
-Para iniciar el servidor de desarrollo de Django, usa el siguiente comando dentro de la carpeta del backend:
-```bash
-python manage.py runserver
-```
-
-### Iniciar el Frontend
-Para iniciar el servidor de desarrollo de React, usa el siguiente comando dentro de la carpeta del frontend:
-```bash
-npm start
-```
-
-### Iniciar la con docker
-
-```bash
-docker-compose up --build
-```
-
-Este comando iniciará la aplicación en [http://localhost:3000](http://localhost:3000).
-
-## Explicación de la Funcionalidad
-
-### Servicios API (Backend)
-En el backend, la API se desarrolló usando **Django Rest Framework**. Algunos de los endpoints expuestos incluyen:
-
-- **GET /newsletters/**: Recupera todas las newsletters.
-- **POST /newsletters/**: Crea una nueva newsletter (se permiten archivos PDF e imágenes).
-- **POST /newsletters/{id}/send/**: Envía una newsletter específica.
-- **POST /newsletters/{id}/schedule/**: Programa una newsletter para enviarla en una fecha futura.
-- **GET /subscribers/**: Recupera todos los suscriptores.
-- **POST /subscribers/**: Añade un nuevo suscriptor.
-- **GET /unsubscribe/{email}**: Desuscribe a un usuario con un email específico.
-
-### Servicios API (Frontend)
-En el archivo `src/services/api.js` se definen las funciones para interactuar con la API del backend. Algunos ejemplos de estas funciones son:
-
-- **getNewsletters**: Recupera todas las newsletters.
-- **createNewsletter**: Crea una nueva newsletter con datos en `FormData`, permitiendo incluir archivos PDF e imágenes.
-- **sendNewsletter**: Envía una newsletter específica a los suscriptores.
-- **scheduleNewsletter**: Programa el envío de una newsletter en una fecha futura.
-- **getSubscribers**: Recupera todos los suscriptores.
-- **createSubscriber**: Agrega un nuevo suscriptor.
-- **unsubscribeUser**: Desuscribe a un suscriptor específico a través de su email.
-
-### Componentes
-
-- **NewsletterList** (`src/components/NewsletterList.js`):
-  - Permite crear, enviar y programar newsletters.
-  - El formulario permite agregar un título, adjuntar un archivo PDF y/o una imagen.
-  - Muestra la lista de newsletters creadas.
-
-- **SubscriberList** (`src/components/SubscriberList.js`):
-  - Permite agregar nuevos suscriptores por correo electrónico.
-  - Muestra la lista de todos los suscriptores registrados.
-
-### Integración de Componentes
-En el archivo `src/App.js`, los componentes `NewsletterList` y `SubscriberList` se integran dentro del componente principal, proporcionando un punto central para la administración de newsletters y suscriptores.
-
-### Crear una Newsletter
-El formulario de creación de newsletters permite adjuntar un archivo PDF y una imagen para que los destinatarios reciban la newsletter con esos adjuntos. La función `handleCreateNewsletter` gestiona el envío de la información al backend usando `FormData`.
-
-```js
-const handleCreateNewsletter = () => {
-  const formData = new FormData();
-  formData.append('title', newTitle);
-  if (pdfFile) {
-    formData.append('pdf_file', pdfFile);
-  }
-  if (imageFile) {
-    formData.append('image_file', imageFile);
-  }
-
-  createNewsletter(formData)
-    .then(() => {
-      setNewTitle('');
-      setPdfFile(null);
-      setImageFile(null);
-      document.getElementById('pdf-input').value = "";
-      document.getElementById('image-input').value = "";
-      fetchNewsletters();
-    })
-    .catch(error => console.error('Error creating newsletter:', error));
-};
-```
-
-Hecho con ❤️ por [Wilmar Fernando Pineda Rojas](https://github.com/wfpinedar).
-
+## Stack y skills tecnicos
+- Django 5, Django REST Framework, SQLite/ORM de Django, CORS.
+- Envio de email con adjuntos (EmailMessage) y plantillas HTML.
+- React (CRA), axios, FontAwesome, consumo de API REST y manejo de `FormData`.
+- Docker/Docker Compose para levantar frontend+backend en segundos.
